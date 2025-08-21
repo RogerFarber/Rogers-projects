@@ -1,0 +1,13 @@
+CREATE TABLE IF NOT EXISTS users(
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  created_at TIMESTAMP DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS events(
+  id SERIAL PRIMARY KEY,
+  user_id INT NOT NULL REFERENCES users(id),
+  type TEXT NOT NULL,
+  occurred_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP DEFAULT now()
+);
