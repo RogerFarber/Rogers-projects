@@ -1,11 +1,1 @@
-/bin
-/dist
-*.exe
-*.test
-*.out
-coverage.*
-vendor/
-/go.work
-.vscode/
-.idea/
-.DS_Store
+
