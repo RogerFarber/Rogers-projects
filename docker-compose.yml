@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   db:
     image: postgres:16
@@ -5,7 +7,8 @@ services:
       POSTGRES_USER: app
       POSTGRES_PASSWORD: app
       POSTGRES_DB: events
-    ports: ["5432:5432"]
+    ports:
+      - "5432:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
       - ./internal/db/migrations/0001_init.sql:/docker-entrypoint-initdb.d/0001_init.sql:ro
@@ -16,18 +19,39 @@ services:
       retries: 20
 
   api:
-    build: .
+    build:
+      context: .
+      target: api
     environment:
       DATABASE_URL: postgres://app:app@db:5432/events?sslmode=disable
-    ports: ["8080:8080"]
+      REDIS_ADDR: redis:6379
+    ports:
+      - "8080:8080"
     depends_on:
       db:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
+      redis:
+        condition: service_started
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  worker:
+    build:
+      context: .
+      target: worker
+    environment:
+      DATABASE_URL: postgres://app:app@db:5432/events?sslmode=disable
+      REDIS_ADDR: redis:6379
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      api:
+        condition: service_started
 
 volumes:
   db-data:
